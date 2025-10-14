@@ -497,6 +497,33 @@ unit cell can be represented by lattice vectors with coordintes being
 combinations
 of 0 and 1.
 
+\subsection{Input file}
+
+A simple input file for a Quantum-Espresso plane-wave calculation will be shown
+here:
+
+\begin{center}
+\begin{tcblisting}{listing file={./calculations/calculations/cu_a2.200.in},
+                   minted language=text,
+                   colback=gray!10,
+                   colframe=gray!30,
+                   listing only}
+\end{tcblisting}
+\end{center}
+
+\begin{figure}[h]
+    \centering
+    \input{./assets/lattice_optimization.tex}
+    \caption{Diagram of total energy per atom of simple cubic copper as 
+    a function of lattice parameter}
+    \label{fig:cu_cubic}
+\end{figure}
+
 \printbibliography
+
+\section{Appendix}
+
+The detailed code used to produce \cref{fig:cu_cubic} is included here. It includes
+two python scripts that were used to generate files for running 
 
 \end{document}

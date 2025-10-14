@@ -14,4 +14,9 @@ _minted-main/
 svg-inkscape/
 pdflatex*
 assets/papers
+calculations/calculations/
+calculations/calculations/*
+!calculations/calculations/cu_a2.200.in
+*.minted
+calculations/tmp/
 
