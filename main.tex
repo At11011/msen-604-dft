@@ -432,56 +432,13 @@ Naturally, this requires picking a specific computational framework to
 perform the operation.
 \href{https://www.quantum-espresso.org/}{Quantum Espresso} will be used in
 this work, as it is a mature, well-trusted, featureful, and open-source
-program that is accessible to anyone with a modern computer. The working
+program that is accessible to anyone with a modern computer
+\cite{quantum-espresso}. The working
 example will be kept small to enable even modest hardware to execute it.
 
 \begin{figure}
 \centering
-% set view angle
-\tdplotsetmaincoords{75}{125}% rot x rot z
-
-\begin{tikzpicture}[tdplot_main_coords,scale=3.0, axis/.style={thick,
-  ->, >=stealth'}]
-
-  \def \s {0.0}     % defines shear of z along y (instead of angles),
-  % for orthogonal systems: 0
-  \def \su {-0.0}   % defines shear of x along y (instead of angles),
-  % for orthogonal systems: 0
-  \def \a {1}       % unit cells along a (only integers!)
-  \def \b {1}       % unit cells along b (only integers!)
-  \def \c {1}       % unit cells along c (only integers!)
-
-  % lattice directions parallel to c
-  \foreach \u in {0,1,...,\a}
-  \foreach \v in {0,1,...,\b}
-  \foreach \w in {0,1,...,\c}
-  \draw[very thin,gray] (\u+\su*\v,\v,0) -- (\u+\su*\v,\v+\s*\w,\w);
-  % lattice directions parallel to b
-  \foreach \u in {0,1,...,\a}
-  \foreach \v in {0,1,...,\b}
-  \foreach \w in {0,1,...,\c}
-  \draw[very thin,gray] (\u,0+\s*\w,\w) -- (\u+\su*\v,\v+\s*\w,\w);
-  % lattice directions parallel to a
-  \foreach \u in {0,1,...,\a}
-  \foreach \v in {0,1,...,\b}
-  \foreach \w in {0,1,...,\c}
-  \draw[very thin, gray] (0+\su*\v,\v+\s*\w,\w) -- (\u+\su*\v,\v+\s*\w,\w);
-
-  % basis vectors
-  \draw[axis] (0,0,0) -- (1,0,0) node[left] {$\bf x$};
-  \draw[axis] (0,0,0) -- (\su,1,0) node[right] {$\bf y$};
-  \draw[axis] (0,0,0) -- (0,\s,1) node[above] {$\bf z$};
-  \foreach \u in {0,1,...,\a}
-  \foreach \v in {0,1,...,\b}
-  \foreach \w in {0,1,...,\c}
-  \draw plot [mark=*, mark size=.5] coordinates{(\u+\su*\v,\v+\s*\w,\w)};
-
-  % lattice vectors
-  \draw[thick,red] (0,0,0) -- (0+\su*3,1+\s*1,1) node[right] {\hkl[011]};
-  \draw[thick,red] (0,0,0) -- (1+\su*3,1+\s*1,0) node[right] {\hkl[110]};
-  \draw[thick,red] (0,0,0) -- (1+\su*3,0+\s*1,1) node[right] {\hkl[101]};
-
-\end{tikzpicture}
+\input{assets/simple_cubic.tex}
 \caption{Diagram of a simple cubic structure with lattice vectors
 \hkl[011], \hkl[101], and \hkl[110] shown.}
 \label{fig:lattice}
@@ -499,31 +456,177 @@ of 0 and 1.
 
 \subsection{Input file}
 
-A simple input file for a Quantum-Espresso plane-wave calculation will be shown
-here:
+A simple input file for a Quantum-Espresso plane-wave calculation is shown:
 
+\begin{tcolorbox}[colback=gray!10, colframe=gray!30, boxrule=0.5pt, breakable]
 \begin{center}
-\begin{tcblisting}{listing file={./calculations/calculations/cu_a2.200.in},
-                   minted language=text,
-                   colback=gray!10,
-                   colframe=gray!30,
-                   listing only}
-\end{tcblisting}
+  \inputminted[linenos,
+  numbersep=8pt]{text}{./calculations/calculations/cu_a2.200.in}
 \end{center}
+\end{tcolorbox}
 
-\begin{figure}[h]
-    \centering
-    \input{./assets/lattice_optimization.tex}
-    \caption{Diagram of total energy per atom of simple cubic copper as 
-    a function of lattice parameter}
-    \label{fig:cu_cubic}
+This input file has several lines that may look unfamiliar to a new
+Quantum-Espresso
+user. While detailed explanations will be omitted, the general idea
+is explained as
+follows:
+
+\begin{itemize}
+\item \textbf{Lines 1--7} (\texttt{\&CONTROL}): This section controls
+  the overall calculation behavior. Line 2 specifies a
+  self-consistent field (SCF) calculation, line 3 sets the prefix for
+  output files, lines 4--5 define directories for temporary files and
+  pseudopotentials, and line 6 sets verbose output for detailed logging.
+
+\item \textbf{Lines 9--19} (\texttt{\&SYSTEM}): This section defines
+  the physical system. Line 10 sets the Bravais lattice type (1 =
+  simple cubic), line 11 specifies the lattice parameter in Bohr
+  radii, lines 12--13 indicate one atom of one type in the unit cell,
+  line 14 sets the kinetic energy cutoff for wavefunctions in
+  Rydberg, lines 15--17 specify Methfessel-Paxton smearing with a
+  broadening of \SI{0.02}{Ry} for metallic systems, and line 18 selects the
+  PW91 exchange-correlation functional.
+
+\item \textbf{Lines 21--24} (\texttt{\&ELECTRONS}): This section
+  controls the electronic convergence. Line 22 sets the convergence
+  threshold for self-consistency to \SI{10e-8}{Ry}, and line 23
+  specifies the mixing parameter for charge density updates during
+  the SCF cycle.
+
+\item \textbf{Lines 26--27} (\texttt{ATOMIC\_SPECIES}): Line 27
+  defines the atomic species: copper with atomic mass \SI{63.546}{amu} and
+  the corresponding ultrasoft pseudopotential file.
+
+\item \textbf{Lines 29--30} (\texttt{ATOMIC\_POSITIONS}): Line 30
+  places a single copper atom at the origin in crystal coordinates
+  (fractional coordinates of the unit cell).
+
+\item \textbf{Lines 32--33} (\texttt{K\_POINTS}): Line 33 generates a
+  $12 \times 12 \times 12$ Monkhorst-Pack k-point mesh for Brillouin
+  zone sampling, with no shift from the origin (the final three zeros).
+\end{itemize}
+
+Detailed documentation on input file keywords are available on the
+Quantum Espresso
+website: \par
+\href{https://www.quantum-espresso.org/Doc/INPUT_PW.html}{https://www.quantum-espresso.org/Doc/INPUT\_PW.html}.
+Many details of this input file are omitted, but the primary points
+are that this is a simple-cubic system for copper using the
+Perdew-Wang 91 exchange
+correlation functional (as
+discussed in \Cref{sec:Exc}), with a lattice parameter set at
+\num{4.157} Bohr radii, or \SI{2.2}{\angstrom}.
+
+To run this simulation, assuming that Quantum Espresso is already installed,
+the correct pseudopotentials for copper must be downloaded from the
+Quantum Espresso
+website
+(\href{https://www.quantum-espresso.org/pseudopotentials/}{https://www.quantum-espresso.org/pseudopotentials/}).
+When the pseudopotential is placed in the \texttt{./pseudo} directory relative
+to where the input file is located. Then the program can be run using
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!30, boxrule=0.5pt, breakable]
+\begin{minted}{bash}
+pw.x < input.in > output.out
+\end{minted}
+\end{tcolorbox}
+
+The \texttt{output.out} file contains a significant amount of information. A key
+piece of information is energy:
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!30, boxrule=0.5pt, breakable]
+\begin{minted}{bash}
+     total energy              =    -121.52982701 Ry
+\end{minted}
+\end{tcolorbox}
+
+\begin{figure}[t]
+\centering
+\input{./assets/lattice_optimization.tex}
+\caption{Diagram of total energy per atom of simple cubic copper as
+  a function of lattice parameter. The Birch-Murnagahan equation
+of state is fit to the data and is shown in red.}
+\label{fig:cu_cubic}
+\end{figure}
+
+A valuable exercise would be to vary the lattice parameter and observe the
+variation in the energy, and then determine the lattice energy which minimizes
+the lattice energy. The results of such an exercise are shown in
+\Cref{fig:cu_cubic}. As can be seen, the lattice parameter that minimizes the
+energy occurs at $a = \SI{2.4102}{\angstrom}$. But it must be stated that
+this does not mean that this is the lattice parameter of copper, as copper
+is not a simple-cubic metal. Instead, it is face-centered cubic
+(FCC), as shown in \Cref{fig:fcc}. If the procedure described here were
+repeated for an FCC structure, it would be discovered that the energy
+per atom would be lower than what was found for simple cubic copper.
+This explains why FCC copper exists in nature, and simple cubic copper does not.
+
+\section{Conclusion}
+
+This article outlined the basics of DFT, as well as an
+exercise which illustrates a basic example of how to use DFT to extract useful
+information about materials. It has proven to provide
+many useful material properties with errors below \SI{1}{\percent}. It can be
+used to predict mechanical and phase properties, and be used to inform
+larger molecular dynamics simulations. It is a crucial tool to many material
+scientists, and widely used in many fields beyond materials research.
+
+\begin{figure}[b]
+\centering
+\input{assets/fcc.tex}
+\caption{Diagram of an FCC structure with lattice vectors
+\hkl[011], $\frac{1}{2}$\hkl[101], and $\frac{1}{2}$\hkl[110] shown.}
+\label{fig:fcc}
 \end{figure}
 
 \printbibliography
 
 \section{Appendix}
+\label{sec:appendix}
 
-The detailed code used to produce \cref{fig:cu_cubic} is included here. It includes
-two python scripts that were used to generate files for running 
+The detailed code used to produce \Cref{fig:cu_cubic} is included
+here. It includes
+two python scripts and a bash script that were used to generate files for
+running Quantum Espresso. This was run on a Windows 11 system in WSL 2.0
+on Ubuntu 24.04.
+
+\pagebreak
+
+\subsection{Input file generation}
+
+This python script was used to generate the various input files
+over a range of lattice parameters (\SI{2.2}{\angstrom}--\SI{2.9}{\angstrom}).
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!30, boxrule=0.5pt, breakable]
+\begin{center}
+  \inputminted[linenos,
+  numbersep=8pt, fontsize=\small]{python}{./calculations/generate_files.py}
+\end{center}
+\end{tcolorbox}
+
+\subsection{File running script}
+
+A short bash script was used to run the file.
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!30, boxrule=0.5pt, breakable]
+\begin{center}
+    \begin{minted}[fontsize=\small]{bash}
+    parallel -j 16 'pw.x < {} > {.}.out' ::: calculations/cu_a*.in
+  \end{minted}
+\end{center}
+\end{tcolorbox}
+
+\subsection{Output file generation}
+
+Another python script was used to process the output files, create a
+curve fit, extract the energy-minimizing lattice spacing, and generate
+a plot.
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!30, boxrule=0.5pt, breakable]
+\begin{center}
+  \inputminted[linenos,
+  numbersep=8pt, fontsize=\small]{python}{./calculations/analyze_results.py}
+\end{center}
+\end{tcolorbox}
 
 \end{document}

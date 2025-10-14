@@ -1,0 +1,33 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'cu_sc_a2.200'
+  outdir = './tmp'
+  pseudo_dir = './pseudo'
+  verbosity = 'high'
+/
+
+&SYSTEM
+  ibrav = 1
+  celldm(1) = 4.15739913
+  nat = 1
+  ntyp = 1
+  ecutwfc = 21.46
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  input_dft = 'PW91'
+/
+
+&ELECTRONS
+  conv_thr = 1.0d-8
+  mixing_beta = 0.7
+/
+
+ATOMIC_SPECIES
+  Cu  63.546  Cu.pw91-n-van_ak.UPF
+
+ATOMIC_POSITIONS crystal
+  Cu  0.0  0.0  0.0
+
+K_POINTS automatic
+  12 12 12  0 0 0

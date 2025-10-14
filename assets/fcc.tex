@@ -1,0 +1,63 @@
+% set view angle
+\tdplotsetmaincoords{75}{125}% rot x rot z
+\begin{tikzpicture}[tdplot_main_coords,scale=3.0, axis/.style={thick,
+  ->, >=stealth'}]
+  \def \s {0.0}     % defines shear of z along y (instead of angles),
+  % for orthogonal systems: 0
+  \def \su {-0.0}   % defines shear of x along y (instead of angles),
+  % for orthogonal systems: 0
+  \def \a {1}       % unit cells along a (only integers!)
+  \def \b {1}       % unit cells along b (only integers!)
+  \def \c {1}       % unit cells along c (only integers!)
+
+  % lattice directions parallel to c
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw[very thin,gray] (\u+\su*\v,\v,0) -- (\u+\su*\v,\v+\s*\w,\w);
+  % lattice directions parallel to b
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw[very thin,gray] (\u,0+\s*\w,\w) -- (\u+\su*\v,\v+\s*\w,\w);
+  % lattice directions parallel to a
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw[very thin, gray] (0+\su*\v,\v+\s*\w,\w) -- (\u+\su*\v,\v+\s*\w,\w);
+
+  % basis vectors
+  \draw[axis] (0,0,0) -- (1,0,0) node[left] {$\bf x$};
+  \draw[axis] (0,0,0) -- (\su,1,0) node[right] {$\bf y$};
+  \draw[axis] (0,0,0) -- (0,\s,1) node[above] {$\bf z$};
+
+  % corner atoms
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw plot [mark=*, mark size=.5] coordinates{(\u+\su*\v,\v+\s*\w,\w)};
+
+  % face-centered atoms
+  % atoms on xy faces (z=0 and z=1)
+  \foreach \w in {0,1,...,\c}
+  \draw plot [mark=*, mark size=.5, mark options={fill=blue}]
+  coordinates{(0.5+\su*0.5,0.5+\s*\w,\w)};
+
+  % atoms on xz faces (y=0 and y=1)
+  \foreach \v in {0,1,...,\b}
+  \draw plot [mark=*, mark size=.5, mark options={fill=blue}]
+  coordinates{(0.5+\su*\v,\v+\s*0.5,0.5)};
+
+  % atoms on yz faces (x=0 and x=1)
+  \foreach \u in {0,1,...,\a}
+  \draw plot [mark=*, mark size=.5, mark options={fill=blue}]
+  coordinates{(\u+\su*0.5,0.5+\s*0.5,0.5)};
+
+  % lattice vectors (primitive vectors for FCC)
+  \draw[thick,red] (0,0,0) -- (0.5+\su*0.5,0.5,0) node[right]
+  {$\frac{1}{2}$\hkl[110]};
+  \draw[thick,red] (0,0,0) -- (1.0,1.0+\s*1.0,1.0) node[right]
+  {\hkl[011]};
+  \draw[thick,red] (0,0,0) -- (0.5+\su*0.5,0+\s*0.5,0.5) node[right]
+  {$\frac{1}{2}$\hkl[101]};
+\end{tikzpicture}
