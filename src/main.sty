@@ -1,0 +1,142 @@
+% Document class and basic setup
+\documentclass[12pt]{exam}
+% \usepackage[utf8]{inputenc}
+% \usepackage[T1]{fontenc}
+
+% Page layout and geometry
+\usepackage[margin=0.5in, includefoot, includehead]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+
+% Font packages - XeLaTeX/LuaLaTeX vs pdfLaTeX compatibility
+\usepackage{ifxetex,ifluatex}
+\ifxetex
+\usepackage{fontspec}
+\setmainfont{Linux Libertine O}[
+  Ligatures=TeX,
+  Numbers=OldStyle
+]
+\setsansfont{Linux Biolinum O}[
+  Ligatures=TeX,
+  Numbers=OldStyle
+]
+% \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+\else\ifluatex
+\usepackage{fontspec}
+\setmainfont{Linux Libertine O}[
+  Ligatures=TeX,
+  Numbers=OldStyle
+]
+\setsansfont{Linux Biolinum O}[
+  Ligatures=TeX,
+  Numbers=OldStyle
+]
+\setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
+\else
+\usepackage{libertine}
+\fi\fi
+
+% Math packages
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{accents}
+\usepackage{miller}
+
+% List and enumeration
+\usepackage[shortlabels]{enumitem}
+\usepackage{multicol}
+
+% Graphics and figures
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+% \usepackage{svg}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{tikz-3dplot}
+
+% Tables and arrays
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{nicematrix}
+
+% Color and highlighting
+\usepackage{xcolor}
+\definecolor{answerboxcolor}{RGB}{255,245,245} % Very light red background
+\usepackage{empheq}
+
+% Captions and references
+\usepackage[hypcap=false,font=small,labelfont=bf,tableposition=top]{caption}
+\usepackage{subcaption}
+\usepackage[colorlinks=true, allcolors=black]{hyperref}
+\usepackage{cleveref}
+\usepackage[style=numeric,backend=biber]{biblatex}
+\addbibresource{src/refs.bib}
+
+% Units and chemistry
+\usepackage{siunitx}
+\sisetup{
+  group-digits=integer,
+  group-minimum-digits=3,
+  group-separator={,}
+}
+\DeclareSIUnit\angstrom{\text{\AA}} % \angstrom is depracted, so define it here.
+\usepackage[version=4]{mhchem}
+\usepackage{chemformula}
+
+% Code listings
+\usepackage{minted}
+\usepackage{listings}
+\AtBeginEnvironment{minted}{
+\fontsize{8}{10}\selectfont}
+
+% Utility packages
+\usepackage{cancel}
+\usepackage{etoolbox}
+\usepackage{pdfpages}
+\usepackage{blindtext}
+\usepackage{lipsum}
+
+% Custom commands
+\newcommand{\fahrenheit}{^\circ{F}}
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}}
+\newcommand{\msout}[1]{\text{\sout{$#1$}}}
+
+% SI Units
+\DeclareSIUnit\year{y}
+
+% Professional boxed answer environment
+% Creates uniform, centered answer boxes with light red background
+\newcommand{\boxedanswer}[1]{
+  \begin{center}
+    \fcolorbox{black}{answerboxcolor}{%
+      \begin{minipage}{0.85\textwidth}
+        \vspace{0.5em}
+        #1
+        \vspace{0.5em}
+      \end{minipage}%
+    }
+  \end{center}
+  \vspace{0.5em}
+}
+
+% Alternative boxed answer for nested environments (like enumerate)
+\newcommand{\boxedanswersmall}[1]{
+  \begin{center}
+    \fcolorbox{black}{answerboxcolor}{%
+      \begin{minipage}{0.75\textwidth}
+        \vspace{0.3em}
+        #1
+        \vspace{0.3em}
+      \end{minipage}%
+    }
+  \end{center}
+  \vspace{0.3em}
+}

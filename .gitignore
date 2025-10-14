@@ -1,0 +1,17 @@
+main.aux
+main.fdb_latexmk
+main.fls
+main.out
+main.log
+main.pdf
+main.synctex.gz
+main.xdv
+main.bbl
+main.bcf
+main.blg
+main.run.xml
+_minted-main/
+svg-inkscape/
+pdflatex*
+assets/papers
+

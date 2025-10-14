@@ -1,0 +1,502 @@
+\input{./src/main.sty}
+% Additional SI unit for Fahrenheit
+\DeclareSIUnit\fahrenheit{\degree F}
+
+\begin{document}
+
+% Include title page
+\input{./src/titlepage.tex}
+
+\pagebreak
+
+\begin{center}
+  \textbf{Abstract}
+\end{center}
+
+\begin{spacing}{1.15}
+  Density functional theory (DFT) is a computational quantum
+  mechanical method that enables
+  the simulation of quantum systems involving multiple atoms. It
+  provides efficient
+  approximations to the solutions of the Schr\"odinger equation.
+  Direct numerical solutions
+  of the Schr\"odinger equation are typically feasible only for the
+  simplest systems; for
+  larger systems, such as an iron atom with 26 electrons, exact solutions become
+  computationally prohibitive due to the need to track the state of
+  every electron.
+  DFT addresses this challenge by replacing the many-electron
+  wavefunction with the
+  electron density, allowing simulations of many-body quantum
+  mechanical systems.
+  These include not only single atoms with many electrons but also
+  multi-atom systems,
+  with some simulations involving thousands of atoms and enabling the
+  calculation of
+  macroscopic material properties using ab-initio techniques.
+  However, DFT introduces
+  certain limitations, primarily due to the unknown exact form of the
+  exchange-correlation
+  functional, which must be approximated to describe many-body
+  electron interactions.
+\end{spacing}
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} Density functional theory, Quantum
+mechanics, Computational materials science, Ab initio quantum chemistry
+
+\pagebreak
+
+\section{Introduction}
+
+% Much of this introductory content is taken from \cite{sholl2009ch1}. \par
+
+Density functional theory is an approximation method for solving the
+Schr\"odinger equation. The method builds on the original equation, and
+applies several approximations to bring the computational cost of evaluation
+down from exponential to cubic growth, at minimal loss in accuracy.
+To understand
+the significance of this achievement, we must first walk through the origins of
+the Schrodinger equation, and show how DFT allows it to be solved
+computationally
+through several key approximations. \par
+
+The Sch\"odinger equation is one of the most important equations in
+modern physics.
+It is one of the most important foundational equations in quantum mechanics,
+enabling the precise calculation of phenomena in quantum mechanics. Solving
+it enables one to precisely predict behavior on an atomic scale. The
+Schr\"odinger
+equation was first formulated in 1925, and published in 1926
+\cite{schrodinger1}. In a series of four publications, Erwin Schr\"odinger was
+investigating the structure of the hydrogen atom, and the equation appeared as
+follows:
+
+\begin{equation}
+  \Delta \psi + \frac{2m}{K^2}\left( E + \frac{e^2}{r} \right)\psi = 0
+\end{equation}
+
+Where $\Delta \psi$ is the Laplacian of the wavefunction $\psi$, $m$ is mass,
+$K = \frac{h}{2\pi} = \hbar$, $E$ is energy, $e$ is elementary charge, and $r$
+is radial distance. We can generalize the Coulomb potential as any potential
+function which may be position and time dependent, $\frac{e^2}{r} =
+-V(\vec r, t)$,
+and substitute in $\Delta = \nabla^2$,
+as well as $\hbar$ to recover the modern form of the time-independent
+Schr\"odinger equation. With rearrangement:
+
+\begin{equation}
+  \left(-\frac{\hbar^2}{2m}\nabla^2 + V(\vec r, t)\right) \psi = E\psi
+\end{equation}
+
+We can also introduce the Hamiltonian operator $\hat H =
+\left(-\frac{\hbar^2}{2m}\nabla^2 + V(\vec r, t)\right)$, which gives us:
+
+\begin{equation}
+  \hat H \psi = E\psi
+  \label{eq:tise}
+\end{equation}
+
+which is the time-independent Schr\"odinger equation. In a follow up to the
+original series, Schr\"odinger formulated the time-dependent Schr\"odinger
+equation, recognizing a need to evaluate the time-evolution of quantum systems
+to explain the absorption/emission spectra of hydrogen
+\cite{schrodinger2}. It takes on the
+daunting form:
+
+\begin{equation}
+  \Delta _p^{\frac{1}{3}} \sum_l \frac{\delta}{\delta q_l}
+  \left(\Delta_p^{-\frac{1}{2}}\sum_k\alpha_{lk} \delta\psi/\delta q_k\right)
+  - 8\pi^2V\psi/h^2 \mp (4\pi i/ h)\delta \psi / \delta t = 0
+\end{equation}
+
+The first term, while daunting, can be thought of as the Laplacian of the
+wavefunction for a particle with \par
+\noindent mass $m$.
+So $\Delta _p^{\frac{1}{3}} \sum_l \frac{\delta}{\delta q_l}
+\left(\Delta_p^{-\frac{1}{2}}\sum_k\alpha_{lk} \delta\psi/\delta
+q_k\right) = \frac{1}{m}\nabla^2 \psi$. The second term is an
+arbitrary potential, and
+the third term is the time-derivative. Note that since Schr\"odinger
+only attributes meaning to the square modulus of the wavefunction,
+the sign of this last term is arbitrary. He chooses it to be positive.
+This can be rewritten:
+
+\begin{equation}
+  -\frac{\hbar^2}{2m}\nabla^2 \psi
+  + V(\vec r, t)\psi  = i\hbar\frac{\delta \psi}{\delta t}
+\end{equation}
+
+Introducing the Hamiltonian $\hat H$:
+
+\begin{equation}
+  \hat H\psi  = i\hbar\frac{\delta \psi}{\delta t}
+  \label{eq:tdse}
+\end{equation}
+
+\subsection{Solving the Schr\"odinger equation for an atomic system}
+
+The following explanation is heavily inspired by Sholl \cite{sholl}.
+The Schro\"odinger equation is mathematically a well-behaved partial
+differential equation. Most importantly, it is linear. This allows it to
+be solved numerically with relative ease, theoretically. However, we quickly
+run into a problem when we attempt to work in a many-body problem like
+a molecular system. Consider the Hamiltonian in
+\Cref{eq:tise,eq:tdse}, but rewritten for a system containing $N$ electrons
+and $M$ nuclei:
+
+\begin{equation}
+  \hat H =
+  \underbrace{
+    -\frac{\hbar^2}{2m}\sum_{i=1}^N\nabla_i^2
+  }_{\text{Electron kinetic energy}} -
+  \underbrace{
+    \frac{\hbar^2}{2}\sum_{A = 1}^M\frac{1}{M_A}\nabla_A^2
+  }_{\text{Nuclei kinetic energy}} -
+  \underbrace{\sum_{i=1}^N\sum_{A=1}^M \frac{e^2Z_A}{4\pi \varepsilon_0r_{iA}}
+  }_{\text{Electron-nuclei attraction}} +
+  \underbrace{\sum_{i = 1}^N \sum_{j > 1}^N \frac{e^2}{4\pi \varepsilon_0r_{ij}}
+  }_{\text{Electron-electron repulsion}} +
+  \underbrace{
+    \sum_{A = 1}^M \sum_{B>A}^M \frac{e^2Z_AZ_B}{4\pi \varepsilon_0R_{AB}}
+  }_{\text{Nuclei-nuclei repulsion}}
+\end{equation}
+
+where $M_A$ is the mass of a nuclei, $Z_A, Z_B$ is the atomic number
+of a nuclei,
+$r_{iA}$ is the distance of an electron from a nuclei, $r_{ij}$ is the distance
+of an electron from another electron, $\varepsilon_0$ is the vacuum
+permittivity and $R_{AB}$ is the distance
+between nuclei. This is a many-body problem, and can easily grow to become
+impossible to compute numerically. For example, each particle can be represented
+with three spacial coordinates, and one time coordinate. If we split the space
+we are solving for into a 10x10x10 grid with 10 time-steps, assuming a simple
+single-atom system with one nuclei and 20 electrons, we find that this is an
+84-dimensional ($21\times4$) problem. This results in having to
+calculate $(10^4)^{84}$
+data points, or \num{e336}. This number is significantly larger than the number
+of particles in the universe ($\sim\num{e80}$) \cite{eddington}.
+
+\subsubsection{Born-Oppenheimer approxmiation}
+
+One of the earliest approximations used to reduce the computational complexity
+of this problem was posed by Max Born and Robert J. Oppenheimer in
+1927 \cite{born-oppenheimer}. This approximation in essence claims that
+the electronic wavefunctions and the nuclei wave functions can be separated and
+solved separately due to the large mass difference between electrons and
+nuclei. This allows the electronic wavefunctions to be calculated by
+assuming that nuclei are fixed in place. There are arguments going on
+even in recent years about the quantum-mechanical validity of this approach,
+but it is nonetheless widely accepted\cite{huggett}. \par
+
+From a practical point of view, this allows nuclei to be "fixed" in place, while
+the electronic wavefunctions are solved separately. Then once the electronic
+wavefunctions are solved, the nuclear wavefunctions are solved. This
+is repeated for small time steps, enabling time evolution without having to
+simultaneously solve for the electronic and nuclear wavefunctions. The
+\textit{electronic Hamiltonian} can be rewritten:
+
+\begin{align}
+  \hat H_{\text{elec}} &=
+  \overbrace{\underbrace{
+      -\frac{\hbar^2}{2m}\sum_{i=1}^N\nabla_i^2
+  }_{\text{Electron kinetic energy}}}^{\hat T}
+  \overbrace{- \underbrace{0}_{\text{No nuclear kinetic energy}} -
+    \underbrace{\sum_{i=1}^N\sum_{A=1}^M \frac{e^2Z_A}{4\pi \varepsilon_0r_{iA}}
+  }_{\text{Electron-nuclei attraction}}}^{\hat V_{Ne}} +
+  \overbrace{\underbrace{\sum_{i = 1}^N \sum_{j > 1}^N
+      \frac{e^2}{4\pi \varepsilon_0r_{ij}}
+    }_{\text{Electron-electron repulsion}} +
+  \underbrace{C}_{\text{Constant nuclear repulsion}}}^{\hat V_{ee}} \\
+  \hat H_{\text{elec}} &= \hat T + \hat V_{Ne} + \hat V_{ee}
+  \label{eq:electronic hamiltonian}
+\end{align}
+
+In practice, this allows one to solve for the \textit{electronic
+wavefunction}.
+The Schr\"odinger equation with
+the electronic Hamiltonian can be written (For simplicity, we ignore
+spin, $\vec x_i = \vec r_i s_i$).):
+
+\begin{equation}
+\hat H_{\text{elec}}\psi_{\text{elec}}(\vec r_1,\dots,\vec r_N) =
+E_{\text{elec}}\psi_{\text{elec}}(\vec r_1, \dots, \vec r_N)
+\end{equation}
+
+Often the objective of a DFT calculation is to calculate the
+\textit{ground state} electronic
+wavefunction. This is the electronic wavefuction that yields the lowest
+energy. Unfortunately,this approximation is not enough to make the
+solution calculable. The $\hat V_{ee}$ term in \Cref{eq:electronic hamiltonian}
+still makes this a many-body problem. Another approxmiation is needed.
+
+\subsubsection{Kohn-Sham equations}
+\label{sec:kohn-sham}
+In theory, the probability that a number of electrons, $N$, at any
+one of a set of coordinates,
+$\vec r_1,\dots,\vec r_N$, can be measured, while the actual
+wavefunction cannot. This probability can be written:
+
+\begin{equation}
+|\psi(\vec r_1, \dots, \vec r_N)|^2 = \psi^*(\vec r_1, \dots, \vec
+r_N)\psi(\vec r_1,\dots, \vec r_N) \\
+\end{equation}
+
+One way of simplifying this problem is by employing a technique developed
+by Douglas Hartree\cite{hartree}. This involves expressing the electronic
+wavefunction as a product of individual electron wavefunctions.
+
+\begin{equation}
+\psi(\vec r_1, \dots, \vec r_N) \cong  \psi_1(\vec r_1)\psi_2(\vec
+r_2)\dots\psi_N(\vec r_N)
+\end{equation}
+
+This approxmiation can be explored and expanded to eventually reach the
+Hatree-Fock method, another approxmiation method that is widely used for
+solving the Schr\"odinger equation. However, it is separate from DFT. A quantity
+that is analogous to the Hatree product is the electron density:
+
+\begin{equation}
+n(\vec r) = 2 \sum_i\psi_i^*(\vec r)\psi_i(\vec r)
+\label{eq:density}
+\end{equation}
+
+This eliminates the uniqueness of each electron, but in exchange greatly reduces
+the dimensionality of the $n(\vec r)$ quantity compared to the
+wavefunction ($3N \rightarrow 3$). The
+factor of 2 is a consequence of the fact that each eigenstate can be occupied
+by two electrons, one spin-up, another spin-down. The core of DFT is
+to solve not
+for the electronic wavefunction, but instead solve for the electron
+density. This
+is enabled by two mathematical theorems, proved  by Walter Kohn and
+Pierre Hohenberg \cite{hohenberg_kohn}.
+The first theorem is: \textit{The ground-state energy from Schr\"odinger's
+equation is a unique functional of the electron density.} This allows the
+electron density to be used to solve for ground-state energy.
+
+One may ask, what is a \textit{functional}? A functional is a mathematical
+operation that takes a function and outputs a number. For example:
+
+\begin{equation}
+F[f] = \int_{-1}^1 f(x)dx
+\end{equation}
+
+\noindent is a functional. If you plug in $f(x) = x^2$:
+
+\begin{align*}
+F[x^2] &= \int_{-1}^1 x^2 dx \\
+F[x^2] &= \frac{x^3}{3}\Biggr|_{-1}^1 \\
+F[x^2] &= \frac{2}{3} \\
+\end{align*}
+
+\noindent a number comes out as a result.
+
+\noindent To determine the form of the electron functional, a second
+theorem tells
+us: \textit{the electron density that minimizes the energy of
+the overall functional is the true electron density corresponding to
+the full solution of the Schrödinger equation.} Assuming the functional
+is known, this allows one to vary the density to find the minimal energy,
+which corresponds to the ground-state energy, as per the first theorem.
+
+A derivation of equations is provided by Walter Kohn and Lu Jeu Sham
+\cite{kohn_sham}. They found that the energy functional can be written as:
+
+\begin{equation}
+E[\{\psi_i\}] = E_{\text{known}}[\{\psi_i\}] + E_{\text{XC}}[\{\psi_i\}]
+\end{equation}
+
+\noindent $E_{\text{known}}$ function can be written:
+
+\begin{equation}
+E_{\text{known}}[\{\psi_i\}] =
+\underbrace{\frac{h^2}{m}\sum_i\int \psi_i^*\nabla^2\psi_id^3
+r}_{\text{Electron kinetic}} +
+\underbrace{\int V(r)n(r)d^3r}_{\text{Electron-nuclei interaction}} +
+\underbrace{\frac{e^2}{2}\int\int\frac{n(r)n(r')}{|r - r'|}d^3r d^3
+r}_{\text{Electron-electron interaction}} +
+\underbrace{E_{\text{ion}}}_{\text{Nuclei-nuclei interaction}}
+\label{eq:known}
+\end{equation}
+
+\noindent The other functional is $E_{\text{EX}}[\psi_i]$. This is the
+\textit{exchange-correlation functional}, which accounts for all other
+quantum-mechanical effects not found in $E_{\text{known}}[\psi_i]$. Presume for
+now that this functional is known. All that is left is to determine the form
+for the electron density. Fortunately, the Kohn--Sham equations provide a method
+to do this:
+
+\begin{equation}
+\left[ \frac{h^2}{2m}\nabla^2 + V(\vec r) + V_H(\vec r) + V_{XC}(\vec r)
+\right]\psi_i(\vec r) = \varepsilon_i\psi_i(\vec r)
+\label{eq:kohn-sham}
+\end{equation}
+
+$V(r)$ is the same as in \Cref{eq:known}, while $V_H(r)$ is known as the Hartree
+potential:
+
+\begin{equation}
+V_H(\vec r) = e^2 \int\frac{n(r')}{|r - r'|} d^3r
+\end{equation}
+
+\noindent which accounts for repulsion by the surrounding electron density. It
+also accounts for self-interaction, which is not physically accurate and must be
+corrected for in $V_{XC}$. This can be written as the "functional derivative" of
+the exchange-correlation functional:
+
+\begin{equation}
+V_{XC}(r) = \frac{\delta E_{XC}(r)}{\delta n(r)}
+\label{eq:Vxc}
+\end{equation}
+
+\subsubsection{Procedure for DFT}
+
+Using the Kohn-Sham equations we can now establish a general procedure for
+performing a DFT calculations. The following procedure can be followed:
+
+\begin{enumerate}
+\item Define a trial electron density, $n(r)$.
+\item Solve the Kohn-Sham equations using the trial density
+  (\Cref{eq:kohn-sham}). \label{en:solve}
+\item Calculate the electron density using \Cref{eq:density}.
+\item Compare the calculated density with the original density. If they match,
+  the ground state as been found. Otherwise, "update" the electron
+  density and repeat step
+  \ref{en:solve}.
+\end{enumerate}
+
+\noindent This general procedure omits several details, such as how
+to choose the
+trial density, what criteria are used to compare the densities, and
+how to "update"
+the electron densities. These details are not expanded upon here, but
+can be found
+in more detailed books on DFT.
+
+\subsubsection{The exchange-correction functional}
+\label{sec:Exc}
+
+A major detail that was previously omitted is what the true form of the
+exchange-correlation functional is. This is a central problem in DFT,
+and its true form is  still not fully understood. There are a number of
+approximations for the exchange-correlation functional that have
+emerged over the years. A simple case where this functional as been derived
+is the exchange-correlation functional for a uniform electron gas.
+We set the exchange correlation covered
+in \Cref{eq:Vxc} to a known exchange-correlation potential corresponding to
+an electron density at a particular position.
+\begin{equation}
+V_{\text{XC}}(r) = V_{\text{XC}}^{\text{electron gas}}[n(r)]
+\end{equation}
+
+The local density is used to
+approximate the exchange-correlation function. Hence, it is called the
+\textit{local density approximation} (LDA). While this provides an approximation
+for a solution to the Schr\"odinger equation, it is not exact due to the
+LDA. Another approximation which also accounts for the local gradient of the
+electron density is the \textit{generalized gradient approximation}. While this
+utilizes more information than the LDA, it is not always more accurate. Many
+other functionals have been found that work well in various domains. There have
+been many forms of the GGA, such as the Perdew-Wang 91 functional (PW91), which
+works well in solids \cite{perdew-wang}. Many other GGA functionals have been
+created for various use cases, such as in isolated molecules.
+
+\subsection{Downsides of DFT}
+
+Because DFT is inherently an approximation and not an exact solution to the
+Schr\"odinger equation, it has some associated error. This error cannot always
+be quantified, and there are specific areas where DFT falls short \cite{sholl}.
+For example, DFT is not reliable for calculating electronic exited states. This
+is because the Hohenberg-Kohn theorems mentioned in \Cref{sec:kohn-sham} only
+apply to the ground electronic states, and not excited states. In addition, it
+tends to underestimate band gaps in insulators and semi-conductors.
+DFT also has challenges modeling weak van der Waals interactions that result
+from long-distance electron correlation. Recall from \Cref{sec:Exc} that
+estimates for the exchange-correlation functional generally use local
+approximations, making them poorly suited for long-range effects. Finally,
+DFT is limited to relatively small collections of atoms. While DFT enables
+the simulation of many more atoms than direct solutions of the Schr\"odinger
+equation (which quickly becomes infeasible even for single small atoms), even
+a recent 2023 study pushing the limits of DFT was only able to simulate 100,000
+atoms \cite{dogan}. While this is a significance achievement, it is still far
+from macroscopic levels. Utilizing DFT requires techniques for extracting
+macroscopic properties from simulations of relatively  small
+collections of atoms.
+
+\section{A working example}
+
+Now that the basics of DFT have been established, this section will cover a
+simple working example to demonstrate how to perform a DFT calculation.
+Naturally, this requires picking a specific computational framework to
+perform the operation.
+\href{https://www.quantum-espresso.org/}{Quantum Espresso} will be used in
+this work, as it is a mature, well-trusted, featureful, and open-source
+program that is accessible to anyone with a modern computer. The working
+example will be kept small to enable even modest hardware to execute it.
+
+\begin{figure}
+\centering
+% set view angle
+\tdplotsetmaincoords{75}{125}% rot x rot z
+
+\begin{tikzpicture}[tdplot_main_coords,scale=3.0, axis/.style={thick,
+  ->, >=stealth'}]
+
+  \def \s {0.0}     % defines shear of z along y (instead of angles),
+  % for orthogonal systems: 0
+  \def \su {-0.0}   % defines shear of x along y (instead of angles),
+  % for orthogonal systems: 0
+  \def \a {1}       % unit cells along a (only integers!)
+  \def \b {1}       % unit cells along b (only integers!)
+  \def \c {1}       % unit cells along c (only integers!)
+
+  % lattice directions parallel to c
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw[very thin,gray] (\u+\su*\v,\v,0) -- (\u+\su*\v,\v+\s*\w,\w);
+  % lattice directions parallel to b
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw[very thin,gray] (\u,0+\s*\w,\w) -- (\u+\su*\v,\v+\s*\w,\w);
+  % lattice directions parallel to a
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw[very thin, gray] (0+\su*\v,\v+\s*\w,\w) -- (\u+\su*\v,\v+\s*\w,\w);
+
+  % basis vectors
+  \draw[axis] (0,0,0) -- (1,0,0) node[left] {$\bf x$};
+  \draw[axis] (0,0,0) -- (\su,1,0) node[right] {$\bf y$};
+  \draw[axis] (0,0,0) -- (0,\s,1) node[above] {$\bf z$};
+  \foreach \u in {0,1,...,\a}
+  \foreach \v in {0,1,...,\b}
+  \foreach \w in {0,1,...,\c}
+  \draw plot [mark=*, mark size=.5] coordinates{(\u+\su*\v,\v+\s*\w,\w)};
+
+  % lattice vectors
+  \draw[thick,red] (0,0,0) -- (0+\su*3,1+\s*1,1) node[right] {\hkl[011]};
+  \draw[thick,red] (0,0,0) -- (1+\su*3,1+\s*1,0) node[right] {\hkl[110]};
+  \draw[thick,red] (0,0,0) -- (1+\su*3,0+\s*1,1) node[right] {\hkl[101]};
+
+\end{tikzpicture}
+\caption{Diagram of a simple cubic structure with lattice vectors
+\hkl[011], \hkl[101], and \hkl[110] shown.}
+\label{fig:lattice}
+\end{figure}
+
+\subsection{Lattice structure}
+
+This example will model a simple cubic lattice structure. The structure is
+shown in \Cref{fig:lattice}. Note that this structure is very rare in nature.
+The only element that exhibits this structure is polonium \cite{beamer}.
+However, this structure is convenient as the positions of each atom in the
+unit cell can be represented by lattice vectors with coordintes being
+combinations
+of 0 and 1.
+
+\printbibliography
+
+\end{document}
