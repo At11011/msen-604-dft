@@ -561,6 +561,14 @@ repeated for an FCC structure, it would be discovered that the energy
 per atom would be lower than what was found for simple cubic copper.
 This explains why FCC copper exists in nature, and simple cubic copper does not.
 
+\begin{figure}[t]
+\centering
+\input{assets/fcc.tex}
+\caption{Diagram of an FCC structure with lattice vectors
+\hkl[011], $\frac{1}{2}$\hkl[101], and $\frac{1}{2}$\hkl[110] shown.}
+\label{fig:fcc}
+\end{figure}
+
 \section{Conclusion}
 
 This article outlined the basics of DFT, as well as an
@@ -571,15 +579,11 @@ used to predict mechanical and phase properties, and be used to inform
 larger molecular dynamics simulations. It is a crucial tool to many material
 scientists, and widely used in many fields beyond materials research.
 
-\begin{figure}[b]
-\centering
-\input{assets/fcc.tex}
-\caption{Diagram of an FCC structure with lattice vectors
-\hkl[011], $\frac{1}{2}$\hkl[101], and $\frac{1}{2}$\hkl[110] shown.}
-\label{fig:fcc}
-\end{figure}
+\pagebreak
 
 \printbibliography
+
+\pagebreak
 
 \section{Appendix}
 \label{sec:appendix}
@@ -588,7 +592,8 @@ The detailed code used to produce \Cref{fig:cu_cubic} is included
 here. It includes
 two python scripts and a bash script that were used to generate files for
 running Quantum Espresso. This was run on a Windows 11 system in WSL 2.0
-on Ubuntu 24.04.
+on Ubuntu 24.04. The python scripts were produced with
+the aid of Claude Sonnet 4.5.
 
 \pagebreak
 
